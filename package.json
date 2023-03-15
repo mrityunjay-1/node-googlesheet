@@ -1,0 +1,21 @@
+{
+  "name": "node-googlesheet",
+  "version": "1.0.9",
+  "description": "A Node Package for smooth use of googlesheet programatically.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type":"git",
+    "url": "https://github.com/mrityunjay-1/node-googlesheet"
+  },
+  "keywords": [
+    "node",
+    "googlesheet",
+    "googlespreadsheet",
+    "gsheet"
+  ],
+  "author": "Mrityunjay Kumar",
+  "license": "ISC"
+}
