@@ -269,7 +269,7 @@ class GoogleSheet {
     }) {
         try {
 
-            if (dimension !== "COLUMN") {
+            if (!(["ROWS", "COLUMNS"].includes(dimension))) {
                 throw new Error("dimension value should be either ROWS or COLUMN");
             }
 

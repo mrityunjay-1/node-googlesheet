@@ -345,7 +345,7 @@ var GoogleSheet = /** @class */ (function () {
                 switch (_e.label) {
                     case 0:
                         _e.trys.push([0, 4, , 5]);
-                        if (dimension !== "COLUMN") {
+                        if (!(["ROWS", "COLUMNS"].includes(dimension))) {
                             throw new Error("dimension value should be either ROWS or COLUMN");
                         }
                         if (!(indexesToBeDelete && indexesToBeDelete.startIndex && indexesToBeDelete.endIndex)) {
