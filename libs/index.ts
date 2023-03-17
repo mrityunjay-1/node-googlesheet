@@ -1,9 +1,19 @@
 const googleapis = require("googleapis");
 const sheets = googleapis.google.sheets("v4");
 
+const GSUtils = require("./utils");
+
+const utils: any = new GSUtils();
+
 class GoogleSheet {
 
-    constructor(auth_type, auth_data) {
+    valueInputOption: string;
+    sheets: any;
+    auth: any;
+    utils: Utils;
+    spreadsheetId: string | undefined;
+
+    constructor(auth_type: string, auth_data: any) {
         let oauth;
 
         switch (auth_type) {
@@ -34,27 +44,11 @@ class GoogleSheet {
         this.valueInputOption = "RAW";
         this.sheets = sheets;
         this.auth = oauth;
+        this.utils = utils;
     }
 
-    formatDataLikeJson(data) {
 
-        let res = [], obj = {}, headers = data[0];
-
-        for (let i = 1; i < data.length; ++i) {
-
-            for (let j = 0; j < headers.length; ++j) {
-                obj[`${headers[j]}`] = data[i][j];
-            }
-
-            res.push(obj);
-
-            obj = {};
-        }
-
-        return res;
-    }
-
-    getCellName([row, col]) {
+    getCellName([row, col]: [number, number]) {
         let column = "";
         let col_repeatation = Math.floor(col / 27);
         if (col_repeatation > 0) column = column + String.fromCharCode(64 + col_repeatation);
@@ -87,7 +81,7 @@ class GoogleSheet {
         }
     }
 
-    async setSpreadSheetToWorkWith(spreadsheetId) {
+    async setSpreadSheetToWorkWith(spreadsheetId: string) {
 
         try {
 
@@ -125,13 +119,13 @@ class GoogleSheet {
 
             return res;
 
-        } catch (err) {
+        } catch (err: any) {
             console.log(err);
             return err.message;
         }
     }
 
-    async append(value, range = "Sheet1") {
+    async append(value: any, range = "Sheet1") {
 
         let request = {
             auth: this.auth,
@@ -163,7 +157,7 @@ class GoogleSheet {
             const res = (await sheets.spreadsheets.values.get(request)).data;
 
             if (!raw_data) {
-                let formattedData = this.formatDataLikeJson(res.values);
+                let formattedData = utils.formatDataLikeJson(res.values);
                 return formattedData;
             }
 
@@ -174,7 +168,7 @@ class GoogleSheet {
         }
     }
 
-    async searchText(text, range = "Sheet1") {
+    async searchText(text: string, range = "Sheet1") {
 
         const data = await this.read(range, true);
 
@@ -229,6 +223,97 @@ class GoogleSheet {
             const res = (await sheets.spreadsheets.values.clear(request)).data;
 
             return res;
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    async getSheetId(sheetName = "Sheet1") {
+        try {
+
+            let request = {
+                spreadsheetId: this.spreadsheetId,
+                auth: this.auth
+            };
+
+            const sheetData = (await sheets.spreadsheets.get(request)).data;
+
+            if (sheetData?.sheets?.length > 0) {
+                const sheetFound = sheetData?.sheets?.find((sheet: any) => (sheet.properties.title === sheetName));
+
+                if (sheetFound) {
+                    return sheetFound.properties.sheetId;
+                }
+            }
+
+            return -1;
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    async deleteRowsOrColumn({
+        dimension = "ROWS",
+        sheetName = "",
+        sheetId = undefined,
+        indexesToBeDelete
+    }: {
+        dimension: string,
+        sheetName: string,
+        sheetId: any,
+        indexesToBeDelete: {
+            startIndex: number, endIndex: number
+        }
+    }) {
+        try {
+
+            if (dimension !== "COLUMN") {
+                throw new Error("dimension value should be either ROWS or COLUMN");
+            }
+
+            if (!(indexesToBeDelete && indexesToBeDelete.startIndex && indexesToBeDelete.endIndex)) {
+                throw new Error("please pass indexes values as {startIndex: 0, endIndex: 1}");
+            }
+
+            if (!isNaN(sheetId)) {
+                sheetId = Number(sheetId);
+            }
+
+            if (!sheetId && !sheetName) {
+                throw new Error("please pass sheetId or sheetName while calling the deleteRowsOrColumn method...");
+            }
+
+            if (!sheetId && sheetName) {
+                sheetId = await this.getSheetId(sheetName);
+
+                if (sheetId < 0) {
+                    throw new Error("No sheet id found with sheetname: " + sheetName);
+                }
+            }
+
+            let request = {
+                spreadsheetId: this.spreadsheetId,
+                resource: {
+                    requests: [
+                        {
+                            deleteDimension: {
+                                range: {
+                                    ...indexesToBeDelete,
+                                    sheetId,
+                                    dimension
+                                }
+                            }
+                        }
+                    ]
+                },
+                auth: this.auth
+            };
+
+            const deleteRes = (await sheets.spreadsheets.batchUpdate(request)).data;
+
+            return deleteRes;
 
         } catch (err) {
             console.log(err);
