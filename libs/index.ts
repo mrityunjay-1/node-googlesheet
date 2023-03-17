@@ -47,7 +47,6 @@ class GoogleSheet {
         this.utils = utils;
     }
 
-
     getCellName([row, col]: [number, number]) {
         let column = "";
         let col_repeatation = Math.floor(col / 27);
