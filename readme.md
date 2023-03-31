@@ -5,7 +5,7 @@ Accelerate your productivity with this easy-to-use library for Node js
 ```
 npm install node-googlesheet
 ```
-The Most Stable Version is "v1.1.1" so kindly upgrade to same.
+The Most Stable Version is "v1.1.2" so kindly upgrade to same.
 
 ### Sample Code to read data
 
